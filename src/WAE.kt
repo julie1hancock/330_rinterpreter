@@ -36,7 +36,7 @@ data class Multiply (
 data class Number (val number: Int): WAE
 data class Variable (val name: String): WAE
 data class With (
-    val variable: Variable? = null,
+    var variable: Variable? = null,
     var inner: WAE? = null,
     var outer: WAE? = null
 ): WAE

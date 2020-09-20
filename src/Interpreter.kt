@@ -16,29 +16,37 @@ class Interpreter {
             else transform(list[0] as List<*>)
         }
         if(list.size == 3) {
-            if(list[0] is Operation) {
-                val op = list[0] as Operation
-                op.lhs = transform(listOf(list[1]))
-                op.rhs = transform(listOf(list[2]))
-                return op
-            } else if(list[0] is With) {
-                val with = list[0] as With
-                if(list[1] !is List<*>) throw java.lang.IllegalArgumentException("!")
-                val p: Pair<Variable, WAE> = unwrapWith((list[1] as List<*>).removeBad())
-//                with.variable = p.first
-//                with.inner = p.second
-                with.outer = transform(listOf(list[2]))
-            } else throw IllegalArgumentException("!")
+            when {
+                list[0] is Operation -> {
+                    val op = list[0] as Operation
+                    op.lhs = transform(listOf(list[1]))
+                    op.rhs = transform(listOf(list[2]))
+                    return op
+                }
+                list[0] is With -> {
+                    val with = list[0] as With
+                    if(list[1] !is List<*>) throw java.lang.IllegalArgumentException("!")
+                    val p: Pair<Variable, WAE> = unwrapWith((list[1] as List<*>).removeBad())
+                    with.variable = p.first
+                    with.inner = p.second
+                    with.outer = transform(listOf(list[2]))
+                    return with
+                }
+                else -> throw IllegalArgumentException("!")
+            }
         }
         throw IllegalArgumentException("!")
     }
 
     private fun unwrapWith(list: List<*>): Pair<Variable, WAE> {
         if(list.size != 2 || list[0] !is Variable) throw java.lang.IllegalArgumentException("!")
-
-
-        println()
-        return TODO()
+        var variable = list[0] as Variable
+        var wae = when {
+            list[1] is WAE -> list[1] as WAE
+            list[1] is List<*> -> transform(list[1] as List<*>)
+            else -> throw java.lang.IllegalArgumentException("!")
+        }
+        return Pair(variable, wae)
     }
 
     var openParen = 0
@@ -138,7 +146,7 @@ private fun <E> List<E>.getSize(): Int {
 
 fun main(args: Array<String>) {
     val interpreter = Interpreter()
-    var z = interpreter.parse("(with ([var 5]) 6)")
+    var z = interpreter.parse("(with ([var (+ 1 2)]) (+ 3 4))")
     testParseSimple(interpreter)
     testParseNested(interpreter)
     testInvalid(interpreter)
