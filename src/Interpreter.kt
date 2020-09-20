@@ -1,6 +1,8 @@
 class Interpreter {
 
     fun parse(s: String) : WAE {
+        openParen = 0
+        closeParen = 0
         var list = parseToList(s)
         var l = parseList(list).first
         if(openParen != closeParen) throw java.lang.IllegalArgumentException("!")
@@ -155,9 +157,33 @@ fun main(args: Array<String>) {
 }
 
 fun testWith(interpreter: Interpreter) {
-    test(interpreter.parse("(with ([var 5)] 6") == null,
-        "!!"
+    test(interpreter.parse("(with ([var 5]) 6)") ==
+            With(
+                variable = Variable("var"),
+                inner = Number(5),
+                outer = Number(6)
+            ),"(with ([var 5]) 6)"
     )
+
+    test(interpreter.parse("(with ([var (+ 1 2)]) (* 3 4))") ==
+            With(
+                variable = Variable("var"),
+                inner = Plus(
+                    symbol = '+',
+                    lhs = Number(1),
+                    rhs = Number(2)
+                ),
+                outer = Multiply(
+                    symbol = '*',
+                    lhs = Number(3),
+                    rhs = Number(4)
+                )
+            ),"(with ([var (+ 1 2)]) (* 3 4))"
+    )
+    //todo nested & invalid with
+
+
+
 }
 
 fun testInvalid(interpreter: Interpreter) {
